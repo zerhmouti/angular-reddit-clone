@@ -2,6 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { RoleType, SignupRequestPayload } from './signup-request.payload';
 import { AuthService } from '../shared/auth.service';
+import { ToastrService } from 'ngx-toastr';
+import { Router } from '@angular/router';
+import { query } from '@angular/animations';
 
 @Component({
   selector: 'app-signup',
@@ -13,7 +16,7 @@ export class SignupComponent implements OnInit{
   signupForm!:FormGroup<any>;
   signupRequestPayload: SignupRequestPayload;
 
-  constructor(private authService:AuthService){
+  constructor(private authService:AuthService, private toastr:ToastrService, private router:Router){
     this.signupRequestPayload={
       username:'',
       email:'',
@@ -35,12 +38,17 @@ export class SignupComponent implements OnInit{
       this.signupRequestPayload.email= this.signupForm.get('email')?.value;
       this.signupRequestPayload.username = this.signupForm.get('username')?.value;
       this.signupRequestPayload.password = this.signupForm.get('password')?.value;
+      this.signupRequestPayload.role="ADMIN";
       console.log(this.signupRequestPayload);
-      this.authService.signup(this.signupRequestPayload).subscribe({
-        next: (value)=> console.log(value),
-        error: (err)=> console.log(err),
-        complete:()=>{}
-      })
+      this.authService.signup(this.signupRequestPayload).subscribe(
+        data => {
+        this.router.navigate(['/login'],
+          { queryParams: { registered: 'true' } });
+        },
+        error => {
+        console.log(error);
+        this.toastr.error('Registration Failed! Please try again');
+      });
     }
 
 }

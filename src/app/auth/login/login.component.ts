@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { AuthService } from '../shared/auth.service';
 import { LoginRequestPayload } from './login.request.payload';
+import { ToastrService } from 'ngx-toastr';
+import { ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '../shared/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -12,8 +14,10 @@ export class LoginComponent implements OnInit{
 
   loginForm!: FormGroup;
   loginRequest!: LoginRequestPayload;
+  isError!:Boolean;
 
-  constructor(private authService: AuthService){
+  constructor(private authService: AuthService, private toastr: ToastrService,
+    private activatedRoute:ActivatedRoute, private router: Router ){
     this.loginRequest = {
       username: '',
       password:''
@@ -24,7 +28,14 @@ export class LoginComponent implements OnInit{
     this.loginForm =new FormGroup({
       username: new FormControl('',Validators.required),
       password: new FormControl('', Validators.required)
-    })
+    });
+    this.activatedRoute.queryParams
+        .subscribe(params=>{
+            if(params!== undefined && params['registered']=== 'true'){
+              this.toastr.success('Signup Successful');
+              
+            }
+        });
   }
 
   login(){
@@ -32,10 +43,16 @@ export class LoginComponent implements OnInit{
     this.loginRequest.password = this.loginForm.get('password')?.value ;
     this.authService.login(this.loginRequest)
     .subscribe({
-      next: (value)=> console.log(value),
-      error: (err)=> console.log(err),
-      complete: ()=>{}
-    })
+      next: (value: any)=>{
+        if(value){
+            this.isError= false;  
+            this.router.navigateByUrl('/');
+            this.toastr.success('Login successful');
+        }else{
+          this.isError=true;
+        }
+      },
+    }) 
     console.log(this.loginForm);
   }
 }
